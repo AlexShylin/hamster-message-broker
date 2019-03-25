@@ -12,10 +12,10 @@ object TestClient {
          inStream <- managed(new InputStreamReader(connection.getInputStream))
          val in = new BufferedReader(inStream)
     } {
-      //      out.println("w1:kek")
-      //      out.println("w2:kek:kek")
-      //      out.println("w3:kek,kek,kek")
-      out.println("r1-3")
+      out.println("w100004:kek")
+      out.println("w100005:kek:kek")
+      out.println("w100006:kek,kek,kek")
+      out.println("r100001-100003")
       out.flush()
       while (true) println(in.readLine)
     }

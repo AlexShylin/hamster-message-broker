@@ -9,6 +9,8 @@ import scala.util.{Failure, Success, Try}
 
 object FileUtils {
 
+  type FileName = String
+
   val indexFileName = ".index"
 
   def searchLineAutoClose(br: BufferedReader, cond: String => Boolean): String =
