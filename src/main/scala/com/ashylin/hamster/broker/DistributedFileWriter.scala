@@ -1,20 +1,16 @@
-package com.ashylin
+package com.ashylin.hamster.broker
 
 import java.io._
 import java.nio.file.{Files, Paths}
-import java.util.UUID
 
+import com.ashylin.hamster.FileUtils._
 import resource.managed
 
 class DistributedFileWriter(ic: IndexKeeper, approximateFileSize: Int) {
 
-
-  import FileUtils._
-
   ////****************/
   ///* Constructors *//
   //****************///
-
 
   def this(ic: IndexKeeper) = {
     this(ic, 1048576 /*one MB in bytes*/ * 32)
@@ -71,6 +67,7 @@ class DistributedFileWriter(ic: IndexKeeper, approximateFileSize: Int) {
 
 }
 
+/*
 object runner extends App {
   val ic = IndexKeeper(s"${System.getProperty("user.home")}/HAMSTER_HOME")
   new DistributedFileWriter(ic, 15)
@@ -88,3 +85,4 @@ object smoke extends App {
   }
   println(s"Took ${System.currentTimeMillis() - start}ms")
 }
+*/

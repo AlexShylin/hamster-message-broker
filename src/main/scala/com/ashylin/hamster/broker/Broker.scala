@@ -1,4 +1,4 @@
-package com.ashylin
+package com.ashylin.hamster.broker
 
 import java.io._
 import java.net.ServerSocket

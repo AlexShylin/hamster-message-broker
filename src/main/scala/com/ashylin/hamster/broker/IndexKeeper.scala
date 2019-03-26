@@ -1,7 +1,9 @@
-package com.ashylin
+package com.ashylin.hamster.broker
 
 import java.io.{BufferedReader, FileOutputStream, FileReader}
 import java.util.concurrent.ConcurrentHashMap
+
+import com.ashylin.hamster.FileUtils._
 
 import scala.collection.concurrent.Map
 import scala.collection.convert.decorateAsScala.mapAsScalaConcurrentMapConverter
@@ -9,7 +11,6 @@ import scala.collection.mutable.ListBuffer
 
 case class IndexKeeper(workingDir: String) {
 
-  import FileUtils._
   case class DataFileContent(numbers: ListBuffer[Int], var full: Boolean)
 
   ////***************/

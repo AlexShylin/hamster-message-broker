@@ -1,7 +1,7 @@
-package com.ashylin
+package com.ashylin.hamster
 
 import java.io.{BufferedReader, File}
-import java.nio.file._
+import java.nio.file.{Files, Paths}
 
 import resource.managed
 
@@ -26,17 +26,19 @@ object FileUtils {
 
   def readAllFileAutoClose(br: BufferedReader): Array[String] = readAllFile(br, autoClose = true)
 
+  def readAllStreamOnReader(brInner: BufferedReader): Array[String] =
+    Stream.continually(brInner.readLine()).takeWhile(_ != null).toArray
+
   def readAllFile(br: BufferedReader, autoClose: Boolean = false): Array[String] = {
-    def doStream(brInner: BufferedReader) = Stream.continually(brInner.readLine()).takeWhile(_ != null).toArray
 
     if (autoClose) {
-      val tried: Try[Array[String]] = managed(br).map(doStream).tried
+      val tried: Try[Array[String]] = managed(br).map(readAllStreamOnReader).tried
       tried match {
         case Success(_) => tried.get
         case Failure(exception) => throw exception
       }
     }
-    else doStream(br)
+    else readAllStreamOnReader(br)
   }
 
 

@@ -1,7 +1,8 @@
-package com.ashylin
+package com.ashylin.hamster.broker
 
 import java.io.{BufferedReader, FileReader}
 
+import com.ashylin.hamster.FileUtils
 import resource.managed
 
 class DistributedFileReader(ic: IndexKeeper) {
@@ -38,7 +39,9 @@ class DistributedFileReader(ic: IndexKeeper) {
   }
 }
 
+/*
 object test extends App {
   val ic = IndexKeeper(s"${System.getProperty("user.home")}/HAMSTER_HOME")
   println(new DistributedFileReader(ic).read("11-33,22,78-88,78900"))
 }
+*/
