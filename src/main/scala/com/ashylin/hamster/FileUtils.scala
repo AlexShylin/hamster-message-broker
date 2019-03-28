@@ -24,12 +24,12 @@ object FileUtils {
     null
   }
 
-  def readAllFileAutoClose(br: BufferedReader): Array[String] = readAllFile(br, autoClose = true)
+  def readAllFileAutoClose(br: BufferedReader): Array[String] = readAllStream(br, autoClose = true)
 
-  def readAllStreamOnReader(brInner: BufferedReader): Array[String] =
-    Stream.continually(brInner.readLine()).takeWhile(_ != null).toArray
 
-  def readAllFile(br: BufferedReader, autoClose: Boolean = false): Array[String] = {
+  def readAllStream(br: BufferedReader, autoClose: Boolean = false): Array[String] = {
+    def readAllStreamOnReader(brInner: BufferedReader): Array[String] =
+      Stream.continually(brInner.readLine()).takeWhile(_ != null).toArray
 
     if (autoClose) {
       val tried: Try[Array[String]] = managed(br).map(readAllStreamOnReader).tried

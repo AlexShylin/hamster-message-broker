@@ -1,6 +1,6 @@
 package com.ashylin.hamster.broker
 
-import java.io.{BufferedReader, FileReader}
+import java.io.{BufferedReader, FileReader, PrintWriter, StringWriter}
 
 import com.ashylin.hamster.FileUtils
 import resource.managed
@@ -8,7 +8,7 @@ import resource.managed
 class DistributedFileReader(ic: IndexKeeper) {
 
   def read(message: String): String = {
-    readRange(parseReadRange(message))
+      readRange(parseReadRange(message))
   }
 
   private def readSingle(index: Int): String = {
@@ -31,7 +31,9 @@ class DistributedFileReader(ic: IndexKeeper) {
       yield
         if (range contains '-') {
           val nums = range split '-'
-          Range(nums(0).toInt, nums(1).toInt+1).toArray
+          val from = nums(0).toInt
+          val to = if (nums(1) == "max") ic.maxIndex() else nums(1).toInt+1
+          Range(from, to).toArray
         } else {
           Array(range.toInt)
         }

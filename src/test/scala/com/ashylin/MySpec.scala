@@ -2,6 +2,7 @@ package com.ashylin
 
 import org.scalatest._
 
+// TODO tests!!!
 class MySpec extends FlatSpec {
   this: Suite =>
 

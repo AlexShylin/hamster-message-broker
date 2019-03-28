@@ -5,14 +5,15 @@ import java.net.ServerSocket
 
 import resource.managed
 
-class Broker(homeDir: String) {
+class Broker(homeDir: String, port: String) {
   val ic = IndexKeeper(homeDir)
   val writer = new DistributedFileWriter(ic)
   val reader = new DistributedFileReader(ic)
 
 
   def run(): Unit = {
-    managed(new ServerSocket(8007)).acquireAndGet { server =>
+    managed(new ServerSocket(port.toInt)).acquireAndGet { server =>
+      println(s"Started server on port $port")
       while (true) {
         for {
           connection <- managed(server.accept)
@@ -20,31 +21,33 @@ class Broker(homeDir: String) {
           output <- managed(new PrintWriter(new BufferedWriter(new OutputStreamWriter(connection.getOutputStream))))
           line <- Stream.continually(input.readLine()).takeWhile(_ != null)
         } {
-          val action = line.head
-          val message = line.tail
-          action match {
-            case 'w' =>
-              response(output, writer.write(message))
-            case 'r' =>
-              val readData = reader.read(message)
-              response(output, readData)
-            case 'm' => response(output, ic.maxIndex().toString)
+          try {
+            val action = line.head
+            val message = line.tail
+            action match {
+              case 'w' =>
+                response(output, writer.write(message))
+              case 'r' =>
+                val readData = reader.read(message)
+                response(output, readData)
+              case 'm' =>
+                response(output, ic.maxIndex().toString)
+            }
+          } catch {
+            case e: Exception => e.printStackTrace(output)
           }
         }
       }
     }
   }
 
-  def response(out: PrintWriter, message: String) = {
+  def response(out: PrintWriter, message: String): Unit = {
     out.println(message)
     out.flush()
   }
 }
 
-object Broker extends App {
-  val homdir = "/Users/alexandershylin/HAMSTER_HOME"
-
-  // starting broker
-  val broker = new Broker(homdir)
+object BrokerRunner extends App {
+  val broker = new Broker(args(0), args(1))
   broker.run()
 }
