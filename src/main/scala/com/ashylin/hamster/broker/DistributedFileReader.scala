@@ -32,8 +32,8 @@ class DistributedFileReader(ic: IndexKeeper) {
         if (range contains '-') {
           val nums = range split '-'
           val from = nums(0).toInt
-          val to = if (nums(1) == "max") ic.maxIndex() else nums(1).toInt+1
-          Range(from, to).toArray
+          val to = if (nums(1) == "max") ic.maxIndex() else nums(1).toInt
+          Range(from, to+1).toArray
         } else {
           Array(range.toInt)
         }

@@ -3,17 +3,15 @@ package com.ashylin.hamster.client
 import java.io._
 import java.net.Socket
 import java.nio.file.{Files, Paths}
-import java.util.concurrent.locks.{Lock, ReentrantLock}
+import java.util.concurrent.locks.ReentrantLock
 
 import com.ashylin.hamster.FileUtils
-
-import scala.concurrent.ExecutionContext.Implicits.global
 import resource.managed
 
-import scala.collection.mutable
-import scala.concurrent.{Await, Future}
+import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.util.{Failure, Success}
+import scala.concurrent.{Await, Future}
 
 object Receive {
 
@@ -50,53 +48,60 @@ object Receive {
 
     val brokersToOffsets = brokersParsed.zip(lastReadOffsets)
 
-    val maxIndexes = mutable.HashMap[String, Int]()
-    val results: mutable.Buffer[ResponseResult] = mutable.ArrayBuffer[ResponseResult]()
-
     val asyncRequests = brokersToOffsets.map {
       case (addr, start) =>
         val host = addr._1
         val port = addr._2
-        val res = for {
-          connection <- managed(new Socket(host, port))
-          out <- managed(new PrintWriter(new BufferedWriter(new OutputStreamWriter(connection.getOutputStream))))
-          in <- managed(new BufferedReader(new InputStreamReader(connection.getInputStream)))
-        } yield {
-          out.println(s"r$start-max")
+        Future {
+          val connection = new Socket(host, port)
+          var result: ArrayBuffer[ResponseResult] = null
+
+          // request
+          val out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(connection.getOutputStream)))
+          out.println(s"r${start.toInt + 1}-max")
           out.flush()
-          val response = FileUtils.readAllStream(in)
+
+          // response
+          val in = new BufferedReader(new InputStreamReader(connection.getInputStream))
+          val response = new ArrayBuffer[String]()
+          var line: String = null
+          while ( {
+            line = in.readLine
+            line != null
+          }) {
+            response += line
+          }
+
+          // parse response
           val parsedResponse = response.map(FileUtils.indexToData)
-          parsedResponse.map(r => ResponseResult(r._1, r._2))
-        }
-        val future = res.toFuture
+          result = parsedResponse.map(r => ResponseResult(r._1, r._2))
 
-        future.onComplete {
-          case Success(a: Array[ResponseResult]) =>
-            mutex.lock()
-            results ++= a
-            maxIndexes.put(s"$host:$port", a.max.index)
-            mutex.unlock()
-          case Failure(ex: Exception) =>
-            results ++= Array(
-              ResponseResult(Integer.MAX_VALUE, s"Operation failed on request to $host:$port with $ex")
-            )
+          // close resources
+          out.close()
+          in.close()
+          connection.close()
+
+          // return result
+          finish(homdir + "/" + s"$host$$$port", result)
         }
 
-        future
     }.toList
 
     val futureSeq = Future.sequence(asyncRequests)
-    Await.ready(futureSeq, Duration.Inf)
+    Await.result(futureSeq, Duration.Inf)
 
-    // writing max indexes to files
-    brokers.foreach{b =>
-      managed(new PrintWriter(new FileWriter(homdir + "/" + toFileName(b), false))).acquireAndGet{pw =>
-        pw.println(maxIndexes(b).toString)
+
+  }
+
+  def finish(filePath: String, arr: ArrayBuffer[ResponseResult]) = {
+    mutex.lock()
+    if (arr.filter(e => e.index > -1).nonEmpty) {
+      managed(new PrintWriter(new FileWriter(filePath, false))).acquireAndGet { pw =>
+        pw.println(arr.max.index.toString)
       }
     }
-
-    val finalString = results.sorted.map(_.message).mkString(System.lineSeparator())
-    println(finalString)
+    println(arr.map(_.message).mkString(System.lineSeparator()))
+    mutex.unlock()
   }
 
   def toFileName(address: String): String = address.replace(':', '$')

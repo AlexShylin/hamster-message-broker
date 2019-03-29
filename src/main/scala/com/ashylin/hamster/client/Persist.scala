@@ -21,7 +21,7 @@ object Persist {
 
     val numBrokers = args.length
 
-    val dataToPersist = FileUtils.readAllStream(new BufferedReader(new InputStreamReader(System.in)))
+    val dataToPersist = Iterator.continually(scala.Console.readLine()).takeWhile(_ != "END").toArray
     val splitedData = split(dataToPersist, numBrokers)
     val brokerAddresses = args.map(adr => adr.split(':'))
     val brokerToData = brokerAddresses.zip(splitedData)
@@ -34,7 +34,7 @@ object Persist {
           connection <- managed(new Socket(host, port))
           out <- managed(new PrintWriter(new BufferedWriter(new OutputStreamWriter(connection.getOutputStream))))
         } {
-          out.println(d.mkString(System.lineSeparator()))
+          out.println(d.map("w" + _).mkString(System.lineSeparator()))
           out.flush()
         }
         0
@@ -48,7 +48,7 @@ object Persist {
       future
     }.toList
     val futureSeq = Future.sequence(asyncRequests)
-    Await.ready(futureSeq, Duration.Inf)
+    Await.result(futureSeq, Duration.Inf)
   }
 
   private def split(data: Array[String], numPartitions: Int): Array[Array[String]] = {

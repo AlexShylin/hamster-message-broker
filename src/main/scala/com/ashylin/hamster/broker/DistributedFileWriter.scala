@@ -33,7 +33,8 @@ class DistributedFileWriter(ic: IndexKeeper, approximateFileSize: Int) {
 
     val pathToWriteIn = s"${ic.workingDir}/$fileToWriteIn"
 
-    writeToDataFile(pathToWriteIn, newData)
+    val newDataFull = s"$newIndex:$newData"
+    writeToDataFile(pathToWriteIn, newDataFull)
     ic.updateIndex(fileToWriteIn, newIndex)
     newIndex.toString
   }

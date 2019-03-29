@@ -47,7 +47,10 @@ case class IndexKeeper(workingDir: String) {
 
   def maxIndex(): Int = maxIndex(getIncompleteFile)
 
-  def maxIndex(fileName: FileName): Int = indexCache(fileName).numbers.last
+  def maxIndex(fileName: FileName): Int = {
+    val nums = indexCache(fileName).numbers
+    if (nums.isEmpty) 0 else nums.last
+  }
 
   def getDataForNewRecord: (Int, FileName) = {
     val file = getIncompleteFile

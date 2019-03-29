@@ -59,7 +59,7 @@ object FileUtils {
     val split = line.split(":")
     if (split.isEmpty)
       throw new IllegalArgumentException(s"Message can't be empty, must contain 'index:text', actual $line")
-    val index = split(0).toInt
+    val index = if (split(0).matches("[0-9]+")) split(0).toInt else -1
     val data = split.tail.mkString(":")
     (index, data)
   }
